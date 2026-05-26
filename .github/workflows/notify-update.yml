@@ -1,0 +1,67 @@
+name: 🔔 Module Update Hook
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: ✅ Validate Module Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check required module files exist
+        run: |
+          echo "── Checking ACP_Proposals ──"
+          test -f ACP_Proposals/module.json           && echo "✓ module.json" || (echo "✗ MISSING module.json" && exit 1)
+          test -f ACP_Proposals/app/Providers/ACPProposalsServiceProvider.php && echo "✓ ServiceProvider" || (echo "✗ MISSING ServiceProvider" && exit 1)
+          test -f ACP_Proposals/routes/web.php        && echo "✓ routes/web.php" || (echo "✗ MISSING routes/web.php" && exit 1)
+          test -f ACP_Proposals/routes/api.php        && echo "✓ routes/api.php" || exit 1
+
+          echo "── Checking ACP_Sales_Guide ──"
+          test -f ACP_Sales_Guide/module.json         && echo "✓ module.json" || exit 1
+
+          echo "── Checking AkashSalesPipeline ──"
+          test -f AkashSalesPipeline/module.json      && echo "✓ module.json" || exit 1
+
+          echo ""
+          echo "✅ All module structures are valid!"
+
+      - name: List changed files
+        run: |
+          echo "── Files changed in this push ──"
+          git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only HEAD
+
+  notify:
+    name: 📣 Log Update Summary
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Print update summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎬 ACP Modules Updated — $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Commit: ${{ github.sha }}"
+          echo "By: ${{ github.actor }}"
+          echo "Message: ${{ github.event.head_commit.message }}"
+          echo ""
+          echo "▶ To deploy on your CRM server, run:"
+          echo "  cd /path/to/crm"
+          echo "  git -C /path/to/this/repo pull origin main"
+          echo "  cp -r /path/to/this/repo/ACP_Proposals modules/"
+          echo "  cp -r /path/to/this/repo/ACP_Sales_Guide modules/"
+          echo "  cp -r /path/to/this/repo/AkashSalesPipeline modules/"
+          echo "  php artisan core:clear-cache"
+          echo "  npm run build"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

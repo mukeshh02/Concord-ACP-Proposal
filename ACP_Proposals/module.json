@@ -1,0 +1,12 @@
+{
+    "name": "ACP_Proposals",
+    "alias": "acpproposals",
+    "description": "ACP Premium Proposal Builder — Fixed-layout luxury wedding proposal PDF generator for Concord CRM.",
+    "keywords": ["proposals", "pdf", "wedding", "cinematic"],
+    "priority": 0,
+    "providers": [
+        "Modules\\ACP_Proposals\\Providers\\ACPProposalsServiceProvider"
+    ],
+    "files": [],
+    "version": "1.0.0"
+}

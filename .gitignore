@@ -1,0 +1,27 @@
+# Node
+node_modules/
+
+# Laravel / PHP
+*.cache
+*.log
+storage/
+bootstrap/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Compiled assets (not needed — build locally)
+public/build/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# DomPDF generated files
+*.pdf

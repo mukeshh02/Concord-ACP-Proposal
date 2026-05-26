@@ -1,0 +1,23 @@
+{
+    "name": "acp/proposals",
+    "description": "ACP Premium Proposal Builder",
+    "authors": [
+        {
+            "name": "Mukesh Sharma",
+            "email": "mukeshh02@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ACP_Proposals\\": "app/",
+            "Modules\\ACP_Proposals\\Database\\Factories\\": "database/factories/",
+            "Modules\\ACP_Proposals\\Database\\Seeders\\": "database/seeders/"
+        }
+    }
+}
