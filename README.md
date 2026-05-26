@@ -1,148 +1,218 @@
-# 🎬 Akash Camera Production — Concord CRM Custom Modules
+# 🎬 ACP_Proposals — Wedding Proposal PDF Builder
 
-Custom Laravel + Vue 3 modules built on top of **Concord CRM (Innoclapps)** for a professional wedding photography & videography sales team.
-
----
-
-## 📦 Modules
-
-### 1. `ACP_Proposals` — Premium Proposal Builder
-Fixed-layout PDF proposal system for luxury wedding proposals.
-- 5-page A4 proposal with background image templates
-- DomPDF-based PDF generation with text overlay at pixel-perfect positions
-- Full form editor: Cover, Package, Work Scope, Deliverables, Charges, Why Us
-- Day-wise schedule table, 2-column deliverables grid, pricing box
-
-### 2. `ACP_Sales_Guide` — Sales Deal Panel
-Deal-level sales guide injected into the CRM's Deal detail page.
-- Stage-based action suggestions
-- WhatsApp message templates
-- Follow-ups scheduler (Today's Follow-ups dashboard)
-- Checklist progress per stage
-
-### 3. `AkashSalesPipeline` — Pipeline Configuration
-Admin config panel for stage-to-action mapping.
-- Per-stage toolbox JSON config
-- WhatsApp template manager
-- Sales content setup (call script, portfolio links)
+> Premium fixed-layout wedding proposal PDF generator for **Concord CRM**.  
+> Build luxury A4 proposals with background images, schedule tables, deliverables and pricing — in minutes.
 
 ---
 
-## 🚀 Installation
+## 📋 Requirements
 
-### Requirements
-- [Concord CRM 1.7.x](https://www.concordcrm.com/) installed
-- PHP 8.2+, Laravel 11, Node 18+
-- `barryvdh/laravel-dompdf` (already in Concord CRM)
+| Requirement | Version |
+|---|---|
+| Concord CRM | v1.0+ |
+| PHP | 8.1+ |
+| Node.js | 18+ |
+| `barryvdh/laravel-dompdf` | Already bundled in Concord CRM |
 
-### Steps
+---
+
+## 🚀 Installation (Production Server)
+
+### Option A — Script (Recommended)
 
 ```bash
-# 1. Copy modules to your CRM installation
-cp -r ACP_Proposals      /path/to/crm/modules/
-cp -r ACP_Sales_Guide    /path/to/crm/modules/
-cp -r AkashSalesPipeline /path/to/crm/modules/
+# 1. Clone this repo anywhere on your server
+git clone https://github.com/mukeshh02/Concord-ACP-Proposal.git /opt/acp-modules
 
-# 2. Enable modules
-# Add to modules_statuses.json:
-# "ACP_Proposals": true,
-# "ACP_Sales_Guide": true,
-# "AkashSalesPipeline": true
+# 2. Run the install script, pointing it at your CRM
+cd /opt/acp-modules
+bash install.sh /var/www/sales
+```
 
-# 3. Register module JS imports in resources/js/app.js
-# (See app-imports.js for the 3 lines to add)
+The script handles:
+- ✅ Copying module to `modules/`
+- ✅ Running database migrations
+- ✅ Clearing all caches
+- ✅ Creating `storage:link`
+- ✅ Building frontend assets (`npm run build`)
 
-# 4. Fix Vite alias regex to support underscores
-# In vite.config.js, change:
-#   [a-zA-Z]+   →   [a-zA-Z0-9_]+
+---
 
-# 5. Clear module cache (IMPORTANT!)
-rm bootstrap/cache/modules.php
-rm bootstrap/cache/module_autoload.php
+### Option B — Manual
+
+```bash
+# 1. Copy module folder
+cp -r ACP_Proposals/ /var/www/sales/modules/
+
+# 2. Enter CRM directory
+cd /var/www/sales
+
+# 3. Run migrations
+php artisan migrate --force
+
+# 4. Clear caches
+php artisan optimize:clear
 php artisan core:clear-cache
 
-# 6. Run migrations
-php artisan migrate
+# 5. Storage symlink (skip if already exists)
+php artisan storage:link
+
+# 6. Create template directory
+mkdir -p storage/app/acp-proposals/templates
 
 # 7. Build frontend
-npm install
 npm run build
-
-# 8. Upload proposal templates (for ACP_Proposals)
-# Put 5 blank A4 JPG files in:
-#   storage/app/acp-proposals/templates/
-# Filenames: page1_cover.jpg  page2_package.jpg  page3_scope.jpg
-#            page4_why_us.jpg  page5_back.jpg
 ```
 
 ---
 
-## 📁 Template Images (ACP_Proposals)
-
-Place your 5 blank page background images here (not in public/):
-```
-storage/app/acp-proposals/templates/
-├── page1_cover.jpg
-├── page2_package.jpg
-├── page3_scope.jpg
-├── page4_why_us.jpg
-└── page5_back.jpg
-```
-
-> Images are base64-encoded at PDF generation time — no web server access needed.
-
----
-
-## 🗄️ Database Tables
-
-| Table | Module | Purpose |
-|-------|--------|---------|
-| `acp_proposals` | ACP_Proposals | Proposal records with JSON data |
-| `akash_stage_mappings` | AkashSalesPipeline | Per-stage toolbox config |
-| `akash_sales_followups` | ACP_Sales_Guide | Scheduled follow-ups |
-| `akash_sales_pipeline_logs` | ACP_Sales_Guide | Activity log |
-| `akash_sales_templates` | ACP_Sales_Guide | WhatsApp message templates |
-| `akash_sales_settings` | ACP_Sales_Guide | Key-value settings |
-| `akash_checklist_completions` | ACP_Sales_Guide | Checklist per deal+stage |
-
----
-
-## 🔗 Routes
-
-| URL | Description |
-|-----|-------------|
-| `/acp-proposals` | Proposal list & builder |
-| `/acp-sales-guide` | Sales Guide admin |
-| `/akash-sales-pipeline` | Pipeline config |
-| `/akash-sales-pipeline/today` | Today's follow-ups |
-| `GET /api/acp-proposals` | Proposals API |
-| `POST /api/acp-proposals/{id}/generate-pdf` | Generate PDF |
-
----
-
-## 🛠️ Local Dev
+## 🔄 Updating (When New Version Released)
 
 ```bash
-# Recommended: full dev stack
-composer dev
-# Starts: php artisan serve + queue + pail logs + vite HMR
+cd /opt/acp-modules        # wherever you cloned this repo
+bash update.sh /var/www/sales
+```
 
-# Frontend only
-npm run dev
-
-# Build for production
+Or manually:
+```bash
+git pull origin main
+cp -r ACP_Proposals/ /var/www/sales/modules/
+cd /var/www/sales
+php artisan migrate --force
+php artisan optimize:clear
+php artisan view:clear
 npm run build
 ```
 
 ---
 
-## 📸 Built With
+## ⚙️ First-Time Setup (After Install)
 
-- **Concord CRM** — [concordcrm.com](https://www.concordcrm.com/)
-- **Laravel 11** + **Vue 3** + **Vite**
-- **DomPDF** (barryvdh/laravel-dompdf)
-- **Tailwind CSS** (via Concord CRM's build pipeline)
+1. **Assign Permission** → CRM Admin → Settings → Roles  
+   → Enable `"View & Manage Proposals"` for relevant roles
+
+2. **Upload Background Images** → `/acp-proposals` → click **▼ Manage Images**  
+   → Upload one JPG per page (5 pages total)  
+   → Recommended: A4 size (210×297mm) at 150–300 DPI, max 10 MB each
+
+3. **Create a Proposal** → Click `+ New Proposal`
 
 ---
 
-*Built for Akash Camera Production, Rajnandgaon*
+## 📁 Module Structure
+
+```
+ACP_Proposals/
+├── bootstrap/
+│   └── module.php              ← lifecycle hooks (enabled/disabled/deleted)
+├── app/
+│   ├── Http/Controllers/Api/
+│   │   ├── ProposalController.php
+│   │   ├── ProposalPdfController.php
+│   │   └── TemplateImageController.php
+│   ├── Models/
+│   │   └── Proposal.php
+│   └── Providers/
+│       ├── ACPProposalsServiceProvider.php
+│       └── RouteServiceProvider.php
+├── database/migrations/
+│   └── 2026_05_26_000001_create_acp_proposals_table.php
+├── resources/
+│   ├── js/
+│   │   ├── app.js              ← Vue Router + component registration
+│   │   └── views/
+│   │       ├── ProposalIndex.vue   (list + template image manager)
+│   │       └── ProposalEditor.vue  (5-page form editor)
+│   └── views/
+│       ├── index.blade.php     ← SPA shell
+│       └── pdf/
+│           └── proposal.blade.php  ← DomPDF 5-page A4 template
+├── routes/
+│   ├── api.php                 ← All REST endpoints (auth:sanctum)
+│   └── web.php                 ← SPA catch-all (auth)
+├── module.json
+└── composer.json
+```
+
+---
+
+## 🛣️ API Routes
+
+| Method | URL | Description |
+|--------|-----|-------------|
+| GET | `/api/acp-proposals` | List all proposals |
+| POST | `/api/acp-proposals` | Create new proposal |
+| GET | `/api/acp-proposals/{id}` | Get single proposal |
+| PUT | `/api/acp-proposals/{id}` | Update proposal |
+| DELETE | `/api/acp-proposals/{id}` | Delete proposal |
+| POST | `/api/acp-proposals/{id}/generate-pdf` | Generate & save PDF |
+| GET | `/api/acp-proposals/{id}/preview-pdf` | Stream PDF to browser |
+| GET | `/api/acp-proposals/templates/status` | Check uploaded backgrounds |
+| POST | `/api/acp-proposals/templates/{page}` | Upload background image |
+| DELETE | `/api/acp-proposals/templates/{page}` | Remove background image |
+
+All routes require Sanctum authentication.
+
+---
+
+## 🗄️ Database
+
+Single table: `acp_proposals`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint | Primary key |
+| `deal_id` | bigint nullable | Link to CRM deal |
+| `title` | string | Proposal title |
+| `status` | string | `draft` / `ready` / `sent` |
+| `data` | json | All form fields |
+| `pdf_path` | string nullable | Last generated PDF path |
+| `created_by` | bigint nullable | User who created it |
+| `created_at` | timestamp | |
+| `updated_at` | timestamp | |
+
+---
+
+## 📂 Storage Paths
+
+| Path | Purpose |
+|------|---------|
+| `storage/app/acp-proposals/templates/` | Page background images (page1_cover.jpg → page5_back.jpg) |
+| `storage/app/public/acp-proposals/` | Generated PDFs (served via `/storage/acp-proposals/`) |
+
+---
+
+## 🤖 Auto-Deploy via GitHub Actions
+
+Every push to `main`:
+1. ✅ Validates module structure
+2. 📦 Creates a downloadable `.zip` release
+3. 📣 Prints deploy instructions
+
+To set up auto-deploy on your server:
+
+```bash
+# On your server — add a cron or webhook that runs:
+cd /opt/acp-modules && bash update.sh /var/www/sales
+```
+
+Or use a GitHub webhook → point to a deploy endpoint on your server.
+
+---
+
+## 🏠 No Core CRM Dependencies
+
+This module:
+- ✅ Uses only Concord CRM's framework (`ModuleServiceProvider`, `MenuItem`, `Innoclapps`)
+- ✅ Uses `Innoclapps.request()` (built-in CRM axios wrapper) in frontend
+- ✅ Uses `barryvdh/laravel-dompdf` which is already bundled in Concord CRM
+- ✅ Has no external API dependencies
+- ✅ All images stored locally (base64 encoded for DomPDF)
+- ✅ Works on any server running Concord CRM
+
+---
+
+## 📧 Support
+
+Built by [Akash Camera Production](https://akashcameraproduction.com)  
+GitHub: [@mukeshh02](https://github.com/mukeshh02)

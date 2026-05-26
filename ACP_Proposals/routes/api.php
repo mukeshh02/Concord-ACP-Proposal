@@ -3,8 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Modules\ACP_Proposals\Http\Controllers\Api\ProposalController;
 use Modules\ACP_Proposals\Http\Controllers\Api\ProposalPdfController;
+use Modules\ACP_Proposals\Http\Controllers\Api\TemplateImageController;
 
 Route::middleware('auth:sanctum')->prefix('acp-proposals')->group(function () {
+
+    // Template background images (must come before /{proposal} wildcard)
+    Route::get('/templates/status',       [TemplateImageController::class, 'status']);
+    Route::post('/templates/{page}',      [TemplateImageController::class, 'upload']);
+    Route::delete('/templates/{page}',    [TemplateImageController::class, 'delete']);
 
     // Proposal CRUD
     Route::get('/',              [ProposalController::class, 'index']);

@@ -40,11 +40,8 @@ class Proposal extends Model
                 'event_date'  => '',
             ],
             'package' => [
-                'items' => [
-                    'Photography + Videography',
-                    'Cinematic Highlight Film',
-                    'Same Day AI Gallery Access',
-                ],
+                'name'        => 'Royal Experience',
+                'description' => 'Photography & cinematography tailored exclusively for your most special day.',
             ],
             'scope' => [
                 'package_type' => 'SENIOR DIRECTOR',

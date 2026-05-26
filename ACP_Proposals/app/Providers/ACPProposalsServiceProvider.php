@@ -14,19 +14,34 @@ class ACPProposalsServiceProvider extends ModuleServiceProvider
     protected bool $withConfig       = false;  // no config/config.php
     protected bool $withTranslations = false;  // no lang/ folder
 
-    // ── Boot ──────────────────────────────────────────────────────
+    // ── Register ──────────────────────────────────────────────────
     public function register(): void
     {
         $this->app->register(RouteServiceProvider::class);
     }
 
-    /**
-     * Called after the application is fully booted.
-     * No CRM-specific calls needed here for this module.
-     */
+    // ── Setup (called after boot) ─────────────────────────────────
     protected function setup(): void
     {
-        // Nothing extra needed — routes + menu handle everything
+        $this->registerPermissions();
+    }
+
+    // ── Permissions ───────────────────────────────────────────────
+    protected function registerPermissions(): void
+    {
+        Innoclapps::permissions(function ($manager) {
+            $manager->group(
+                ['name' => 'acp-proposals', 'as' => 'Proposals'],
+                function ($manager) {
+                    $manager->view('view acp proposals', [
+                        'as'          => 'View & Manage Proposals',
+                        'permissions' => [
+                            'view acp proposals' => 'Can create, view and manage all proposals',
+                        ],
+                    ]);
+                }
+            );
+        });
     }
 
     // ── Sidebar menu ──────────────────────────────────────────────
@@ -39,7 +54,7 @@ class ACPProposalsServiceProvider extends ModuleServiceProvider
         ];
     }
 
-    // ── Required by ModuleServiceProvider (abstract) ──────────────
+    // ── Required by ModuleServiceProvider ─────────────────────────
     protected function moduleName(): string
     {
         return 'ACP_Proposals';
