@@ -24,6 +24,16 @@ class ACPProposalsServiceProvider extends ModuleServiceProvider
     protected function setup(): void
     {
         $this->registerPermissions();
+        $this->registerModuleScript();
+    }
+
+    // ── Register pre-built IIFE script ────────────────────────────
+    protected function registerModuleScript(): void
+    {
+        $publicPath = public_path('modules/acpproposals/acpproposals.iife.js');
+        if (file_exists($publicPath)) {
+            Innoclapps::script('acpproposals', asset('modules/acpproposals/acpproposals.iife.js'));
+        }
     }
 
     // ── Permissions ───────────────────────────────────────────────

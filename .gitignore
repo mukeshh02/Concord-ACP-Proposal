@@ -17,3 +17,6 @@ Thumbs.db
 
 # Test artifacts
 /coverage/
+
+# Note: dist/ is intentionally committed — pre-built IIFE enables
+# pure ZIP install without needing "npm run build" on the server.

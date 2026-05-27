@@ -27,10 +27,25 @@ if (! function_exists('acpproposals_delete_dir')) {
 
 return Module::configure('acpproposals')
 
-    // ── Enabled: run all module migrations ───────────────────────
+    // ── Enabled: run migrations + publish pre-built JS to public/ ─
     ->enabled(function (Application $app) {
+
+        // 1. Run database migrations
         $app->make(\Illuminate\Database\Migrations\Migrator::class)
             ->run([__DIR__ . '/../database/migrations']);
+
+        // 2. Copy pre-built IIFE JS → public/modules/acpproposals/
+        //    This allows the ServiceProvider to inject it via <script> tag
+        //    without needing "npm run build" on the server.
+        $src  = __DIR__ . '/../dist/acpproposals.iife.js';
+        $dest = public_path('modules/acpproposals/acpproposals.iife.js');
+
+        if (file_exists($src)) {
+            if (! is_dir(dirname($dest))) {
+                mkdir(dirname($dest), 0755, true);
+            }
+            copy($src, $dest);
+        }
     })
 
     // ── Disabled: nothing to do (routes/menus auto-removed) ──────
@@ -52,6 +67,9 @@ return Module::configure('acpproposals')
         Schema::dropIfExists('acp_proposals');
         Schema::dropIfExists('acp_proposal_sets');
 
-        // 3. Wipe all generated PDFs and design-set background images
+        // 3. Remove pre-built JS from public/
+        acpproposals_delete_dir(public_path('modules/acpproposals'));
+
+        // 4. Wipe all generated PDFs and design-set background images
         acpproposals_delete_dir(storage_path('app/public/acp-proposals'));
     });
