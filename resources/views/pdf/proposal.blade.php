@@ -107,17 +107,38 @@ if (!function_exists('acp_tz')) {
 
 {{-- ═══════════════════════════════════════════════════
      WORK SCOPE — Schedule Table
+     Box anchored to BOTTOM — blank space rises upward,
+     background photo fills the gap above. Works with any
+     number of rows (2 days or 7 days).
      ═══════════════════════════════════════════════════ --}}
 <div class="page">
     @php
-        // Single wrapper positioned at scope_header top, using scope_table's left/width
-        $hTop   = (float)($layout['scope_schedule']['scope_header']['top'] ?? 42);
         $tLeft  = (float)($layout['scope_schedule']['scope_table']['left']  ?? 10);
         $tWidth = (float)($layout['scope_schedule']['scope_table']['width'] ?? 190);
-        $boxTop = max(0, $hTop - 5); // 5mm padding above header text
+
+        // Estimate box height from row count so we can anchor to bottom.
+        // DomPDF does not support CSS bottom:, so we calculate top dynamically.
+        //   header label row  ≈ 12mm
+        //   table thead row   ≈ 12mm
+        //   each schedule row ≈ 14mm plain / 20mm with event venue
+        //   bottom padding    ≈  5mm
+        $rows = $data['scope']['schedule'] ?? [];
+        $rowsMm = 0;
+        foreach ($rows as $r) {
+            $rowsMm += empty($r['event']) ? 14 : 20;
+        }
+        $boxHeight = 12 + 12 + $rowsMm + 5;   // header + thead + rows + padding
+
+        $pageH        = 297;
+        $marginBottom =  12;   // mm from bottom of page
+        $boxTop = $pageH - $marginBottom - $boxHeight;
+
+        // Hard floor: never overlap top background photo area
+        $minTop = (float)($layout['scope_schedule']['scope_header']['top'] ?? 42) - 5;
+        $boxTop = max($minTop, $boxTop);
     @endphp
 
-    {{-- Background image (full page — visible above AND below the content box) --}}
+    {{-- Background image — always full page, visible ABOVE the box --}}
     @if(!empty($bg['scope_schedule']))
         <img class="page-bg" src="{{ $bg['scope_schedule'] }}" />
     @else
@@ -125,9 +146,10 @@ if (!function_exists('acp_tz')) {
     @endif
 
     {{--
-        Single content box: wraps both the header label + table.
-        Height is auto → shrinks to exactly fit the content (2 rows or 6 rows).
-        Background image shows above and below this box.
+        Content box — anchored to bottom.
+        2 days  → box near bottom, large photo area above ✓
+        6 days  → box starts higher, photo peek at very top ✓
+        Height auto = always exactly fits content rows.
     --}}
     <div style="
         position:absolute;
@@ -140,7 +162,7 @@ if (!function_exists('acp_tz')) {
         border-bottom: 1px solid #C9A96E;
         padding-bottom: 3mm;
     ">
-        {{-- Header label inside the box --}}
+        {{-- Header label --}}
         <div style="text-align:center; padding: 4mm 5mm 3mm;">
             <span style="font-size:11pt;color:#3a2e1e;letter-spacing:4px;text-transform:uppercase;font-family:Arial,sans-serif;">
                 WORK SCOPE &nbsp;&times;&nbsp; {{ strtoupper($data['scope']['package_type'] ?? 'SENIOR DIRECTOR') }}
@@ -151,7 +173,7 @@ if (!function_exists('acp_tz')) {
         <table class="scope-table">
             <thead><tr><th>DAY</th><th>TEAM DETAILS</th></tr></thead>
             <tbody>
-                @foreach($data['scope']['schedule'] ?? [] as $row)
+                @foreach($rows as $row)
                 <tr>
                     <td>
                         <div class="day-date">{{ $row['date'] ?? '' }}</div>
