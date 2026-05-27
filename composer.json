@@ -1,0 +1,33 @@
+{
+    "name": "acp/proposals",
+    "description": "ACP Premium Proposal Builder — luxury wedding proposal PDF generator for Concord CRM.",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Mukesh Sharma",
+            "email": "mukeshh02@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    },
+    "provide": {
+        "laravel/framework": "*",
+        "illuminate/support": "*",
+        "barryvdh/laravel-dompdf": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ACP_Proposals\\": "app/",
+            "Modules\\ACP_Proposals\\Database\\Factories\\": "database/factories/",
+            "Modules\\ACP_Proposals\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    }
+}
