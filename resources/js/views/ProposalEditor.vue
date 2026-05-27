@@ -235,24 +235,10 @@
                 + Add Day
               </IButton>
 
-              <!-- ✂️ Background crop for this proposal -->
-              <div class="mt-3 flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <span class="text-sm">✂️</span>
-                <span class="text-xs text-neutral-600 font-medium">Background crop height:</span>
-                <input
-                  type="number"
-                  v-model.number="form.data.scope.crop_mm"
-                  min="50" max="297" step="1"
-                  placeholder="297 (full page)"
-                  class="w-32 text-xs border border-neutral-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-300"
-                />
-                <span class="text-xs text-neutral-400">mm &nbsp;(preview to check, then adjust)</span>
-                <button
-                  v-if="form.data.scope.crop_mm"
-                  @click="form.data.scope.crop_mm = null"
-                  class="text-[10px] text-red-400 hover:text-red-600 ml-1"
-                >✕ clear</button>
-              </div>
+              <!-- Info: table auto-anchors to bottom based on row count -->
+              <p class="mt-3 text-xs text-neutral-400 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2">
+                💡 The schedule table is automatically anchored to the bottom of the page — background photo fills the space above. More days = table moves higher.
+              </p>
             </div>
 
             <!-- Deliverables -->
@@ -342,15 +328,14 @@
           <!-- ─── PAGE 5: BACK COVER ─────────────────────── -->
           <div v-if="activePage === 'back'">
             <h2 class="section-heading dark:text-white">🎬 Back Cover</h2>
-            <p class="section-desc">This page is fully static — your brand photography and tagline.</p>
+            <p class="section-desc">This page is background-only — no text zones.</p>
             <div class="mt-6 p-8 bg-neutral-900 rounded-xl text-center">
-              <div class="text-white text-sm font-bold tracking-widest mb-1">AKASH CAMERA PRODUCTION</div>
-              <div class="text-amber-400 text-xs mb-6">Rajnandgaon</div>
-              <div class="text-neutral-500 text-xs italic">[ Your cinematic photo fills this page ]</div>
-              <div class="text-amber-400 text-sm italic mt-6">Let's Create Magic Together</div>
+              <div class="text-neutral-500 text-xs italic">[ Background image from your selected design fills this page ]</div>
+              <div class="text-amber-400 text-sm italic mt-4">Let's Create Magic Together</div>
             </div>
             <p class="text-xs text-neutral-400 mt-3 text-center">
-              Upload <code class="dark:text-neutral-300">page5_back.jpg</code> via the Proposals list page to set this background.
+              Upload the <strong>Back Cover</strong> image in
+              <a class="text-amber-600 underline cursor-pointer" @click="$router.push('/acp-proposals')">PDF Design Templates →</a>
             </p>
           </div>
 
