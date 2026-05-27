@@ -1,0 +1,172 @@
+name: 🚀 ACP_Proposals CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── 1. Validate module structure ─────────────────────────────
+  validate:
+    name: ✅ Validate Module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          echo "── Checking ACP_Proposals structure ──"
+
+          required_files=(
+            "ACP_Proposals/module.json"
+            "ACP_Proposals/composer.json"
+            "ACP_Proposals/bootstrap/module.php"
+            "ACP_Proposals/app/Providers/ACPProposalsServiceProvider.php"
+            "ACP_Proposals/app/Providers/RouteServiceProvider.php"
+            "ACP_Proposals/routes/api.php"
+            "ACP_Proposals/routes/web.php"
+            "ACP_Proposals/database/migrations/2026_05_26_000001_create_acp_proposals_table.php"
+            "ACP_Proposals/resources/js/app.js"
+            "ACP_Proposals/resources/views/index.blade.php"
+            "ACP_Proposals/resources/views/pdf/proposal.blade.php"
+          )
+
+          all_ok=true
+          for f in "${required_files[@]}"; do
+            if [ -f "$f" ]; then
+              echo "  ✓ $f"
+            else
+              echo "  ✗ MISSING: $f"
+              all_ok=false
+            fi
+          done
+
+          if [ "$all_ok" = false ]; then
+            echo "❌ Validation failed — missing required files"
+            exit 1
+          fi
+          echo ""
+          echo "✅ All required files present"
+
+      - name: Validate module.json
+        run: |
+          echo "── Validating module.json ──"
+          cat ACP_Proposals/module.json | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          assert 'name' in d,     'Missing: name'
+          assert 'alias' in d,    'Missing: alias'
+          assert 'version' in d,  'Missing: version'
+          assert 'providers' in d,'Missing: providers'
+          assert len(d['providers']) > 0, 'Empty providers array'
+          print('  ✓ name:',     d['name'])
+          print('  ✓ alias:',    d['alias'])
+          print('  ✓ version:',  d['version'])
+          print('  ✓ provider:', d['providers'][0])
+          "
+
+      - name: Check changed files
+        run: |
+          echo "── Files changed ──"
+          git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only HEAD
+
+  # ── 2. Create GitHub Release on push to main ─────────────────
+  release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from module.json
+        id: version
+        run: |
+          VERSION=$(cat ACP_Proposals/module.json | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])")
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          TIMESTAMP=$(date +%Y%m%d%H%M)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}-${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Package module as ZIP
+        run: |
+          cd ACP_Proposals
+          zip -r ../ACP_Proposals-${{ steps.version.outputs.tag }}.zip . \
+            --exclude "*.git*" \
+            --exclude "*node_modules*" \
+            --exclude "*.DS_Store*"
+          cd ..
+          echo "📦 Created ACP_Proposals-${{ steps.version.outputs.tag }}.zip"
+          ls -lh ACP_Proposals-*.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "ACP_Proposals v${{ steps.version.outputs.version }} (${{ steps.version.outputs.short_sha }})"
+          body: |
+            ## 🎬 ACP_Proposals — Wedding Proposal PDF Builder
+
+            **Version:** `${{ steps.version.outputs.version }}`
+            **Commit:** `${{ steps.version.outputs.short_sha }}`
+            **By:** ${{ github.actor }}
+            **Message:** ${{ github.event.head_commit.message }}
+
+            ---
+
+            ### 📥 Installation
+
+            ```bash
+            # 1. Download ACP_Proposals-*.zip below
+            # 2. Extract and copy the ACP_Proposals/ folder to your CRM:
+            cp -r ACP_Proposals/ /var/www/your-crm/modules/
+
+            # 3. Run in your CRM directory:
+            php artisan migrate --force
+            php artisan optimize:clear
+            php artisan storage:link
+            npm run build
+            ```
+
+            ### 🔄 Updating from previous version
+
+            ```bash
+            # Pull this repo and run:
+            bash update.sh /var/www/your-crm
+            ```
+
+            ---
+            > Requires: Concord CRM v1.0+, PHP 8.1+, `barryvdh/laravel-dompdf` (included in Concord CRM)
+          files: ACP_Proposals-${{ steps.version.outputs.tag }}.zip
+          draft: false
+          prerelease: false
+
+  # ── 3. Deploy summary ────────────────────────────────────────
+  summary:
+    name: 📣 Deploy Summary
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Print deploy instructions
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  🚀 ACP_Proposals pushed to main"
+          echo "  Commit: ${{ github.sha }}"
+          echo "  By: ${{ github.actor }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "  To update sales.akashcameraproduction.com:"
+          echo ""
+          echo "  ssh your-server"
+          echo "  cd /path/to/this/repo && bash update.sh /var/www/sales"
+          echo ""
+          echo "  OR if repo is already on the server:"
+          echo "  git pull origin main && bash update.sh /var/www/sales"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
