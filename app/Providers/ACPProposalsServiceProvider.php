@@ -27,12 +27,18 @@ class ACPProposalsServiceProvider extends ModuleServiceProvider
         $this->registerModuleScript();
     }
 
-    // ── Register pre-built IIFE script ────────────────────────────
+    // ── Register pre-built IIFE script + CSS ─────────────────────
     protected function registerModuleScript(): void
     {
-        $publicPath = public_path('modules/acpproposals/acpproposals.iife.js');
-        if (file_exists($publicPath)) {
+        $jsPath  = public_path('modules/acpproposals/acpproposals.iife.js');
+        $cssPath = public_path('modules/acpproposals/style.css');
+
+        if (file_exists($jsPath)) {
             Innoclapps::script('acpproposals', asset('modules/acpproposals/acpproposals.iife.js'));
+        }
+
+        if (file_exists($cssPath)) {
+            Innoclapps::style('acpproposals', asset('modules/acpproposals/style.css'));
         }
     }
 
